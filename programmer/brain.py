@@ -692,8 +692,13 @@ class Brain:
             pass
             
         if lesson:
-            self.learning.add_lesson(lesson)
-            self.terminal.type_string("\n// saved to memory.\n")
+            try:
+                saved = self.learning.add_lesson(lesson)
+                if saved is not False:
+                    self.terminal.type_string("\n// saved to memory.\n")
+            except Exception as e:
+                print(f"[Brain] Could not save lesson: {e}")
+                self.terminal.type_string("\n// could not save lesson.\n")
         
         time.sleep(2)
 
