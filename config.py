@@ -1,5 +1,7 @@
 import os
 
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+
 # Tiny Programmer Configuration
 VERSION = "0.3.4"
 
@@ -170,8 +172,11 @@ STATE_TRANSITION_DELAY = 2
 # =============================================================================
 
 # Local storage
-# Use relative path 'programs' in current directory by default
-ARCHIVE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "programs")
+ARCHIVE_PATH = os.path.join(PROJECT_ROOT, "programs")
+LEARNING_JOURNAL_PATH = os.environ.get(
+    "LEARNING_JOURNAL_PATH",
+    os.path.join(PROJECT_ROOT, "lessons.md")
+)
 
 # GitHub sync (future)
 GITHUB_ENABLED = False

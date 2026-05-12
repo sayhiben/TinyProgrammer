@@ -1,6 +1,19 @@
 import os
 import random
-from typing import List
+from typing import Optional
+
+
+DEFAULT_HEADER = "# Developer Journal"
+
+
+def _default_filepath() -> str:
+    try:
+        import config
+        return getattr(config, "LEARNING_JOURNAL_PATH")
+    except Exception:
+        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        return os.path.join(base, "lessons.md")
+
 
 class LearningSystem:
     """
@@ -8,15 +21,23 @@ class LearningSystem:
     Stores lessons learned from successes and failures.
     """
     
-    def __init__(self, filepath="lessons.md"):
-        self.filepath = filepath
+    def __init__(self, filepath: Optional[str] = None):
+        self.filepath = filepath or _default_filepath()
         self._ensure_file()
-        
+
+    def _write_path(self) -> str:
+        return os.path.realpath(self.filepath)
+
     def _ensure_file(self):
-        if not os.path.exists(self.filepath):
-            with open(self.filepath, "w") as f:
-                f.write("# Developer Journal\n\n")
-                
+        path = self._write_path()
+        directory = os.path.dirname(path)
+        if directory:
+            os.makedirs(directory, exist_ok=True)
+
+        if not os.path.exists(path) or os.path.getsize(path) == 0:
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(f"{DEFAULT_HEADER}\n\n")
+
     def add_lesson(self, lesson: str, max_lessons=50):
         """
         Add a new lesson to the journal.
@@ -25,49 +46,58 @@ class LearningSystem:
         # Clean up lesson
         lesson = lesson.strip().replace("\n", " ")
         if not lesson:
-            return
-            
+            return False
+
+        path = self._write_path()
+
         # Read existing content
-        if os.path.exists(self.filepath):
-            with open(self.filepath, "r") as f:
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
                 lines = f.readlines()
         else:
-            lines = ["# Developer Journal\n", "\n"]
-            
+            lines = [f"{DEFAULT_HEADER}\n", "\n"]
+
         # Separate header and lessons
         header = []
         lessons = []
         for line in lines:
             if line.startswith("- "):
-                lessons.append(line)
+                lessons.append(line.rstrip("\n"))
             elif line.strip():
-                header.append(line)
-        
+                header.append(line.rstrip("\n"))
+
+        if not header:
+            header = [DEFAULT_HEADER]
+
         # Add new lesson
-        lessons.append(f"- {lesson}\n")
-        
+        lessons.append(f"- {lesson}")
+
         # Truncate if too many (keep most recent)
         if len(lessons) > max_lessons:
             lessons = lessons[-max_lessons:]
-            
+
         # Write back
-        with open(self.filepath, "w") as f:
-            f.writelines(header)
-            if header and not header[-1].endswith("\n"):
-                f.write("\n")
-            f.writelines(lessons)
-            
+        with open(path, "w", encoding="utf-8") as f:
+            for line in header:
+                f.write(f"{line}\n")
+            f.write("\n")
+            for line in lessons:
+                f.write(f"{line}\n")
+
+        return True
+
     def get_recent_lessons(self, limit=5) -> str:
         """Get the most recent lessons formatted for a prompt."""
-        if not os.path.exists(self.filepath):
+        path = self._write_path()
+        if not os.path.exists(path):
             return ""
-            
-        with open(self.filepath, "r") as f:
+
+        with open(path, "r", encoding="utf-8") as f:
             lines = [line.strip() for line in f.readlines() if line.startswith("-")]
-            
+
         if not lines:
             return ""
-            
+
         # Get random selection from recent history to avoid staleness
         # taking last 20, picking 'limit' random ones
         candidates = lines[-20:]
@@ -75,5 +105,5 @@ class LearningSystem:
             selected = random.sample(candidates, limit)
         else:
             selected = candidates
-            
+
         return "\n".join(selected)

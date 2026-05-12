@@ -1,14 +1,11 @@
 #!/bin/sh
-# Ensure bind-mounted files exist as files (not directories) and are writable.
-# When lessons.md or config_overrides.json don't exist on the host before
-# `docker compose up`, Docker may create them as root-owned directories,
-# causing [Errno 13] Permission denied errors at runtime.
+# Ensure runtime volume files exist and are writable before startup.
 
 # Create runtime dir if it doesn't exist
 mkdir -p /app/runtime
 
 # Initialize files if they don't exist or are empty
-touch /app/runtime/lessons.md
+[ -s /app/runtime/lessons.md ] || printf '# Developer Journal\n\n' > /app/runtime/lessons.md
 [ -s /app/runtime/config_overrides.json ] || echo '{}' > /app/runtime/config_overrides.json
 [ -s /app/runtime/liked_programs.json ] || echo '[]' > /app/runtime/liked_programs.json
 

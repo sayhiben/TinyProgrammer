@@ -244,8 +244,8 @@ docker compose exec tinyprogrammer ls programs/
 | -------------------------- | -------------------------------------- | ------------------------------- |
 | Generated programs         | `programs` named volume                | Yes                             |
 | BBS device identity        | `bbs_token` named volume               | Yes                             |
-| Learning journal           | `./lessons.md` (bind mount)            | Yes — lives in your repo folder |
-| Dashboard config overrides | `./config_overrides.json` (bind mount) | Yes — lives in your repo folder |
+| Learning journal           | `runtime` named volume (`/app/runtime/lessons.md`) | Yes |
+| Dashboard config overrides | `runtime` named volume (`/app/runtime/config_overrides.json`) | Yes |
 
 Volumes survive `docker compose down`. To wipe everything and start fresh:
 
