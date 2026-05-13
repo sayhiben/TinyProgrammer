@@ -194,6 +194,7 @@ def create_app():
             # Color scheme (display adjustment layer)
             color_scheme = request.form.get('color_scheme', 'none')
             updates['COLOR_SCHEME'] = color_scheme
+            updates['IDE_AUTO_INDENT_ENABLED'] = 'ide_auto_indent_enabled' in request.form
 
             # BBS settings
             updates['BBS_ENABLED'] = 'bbs_enabled' in request.form
