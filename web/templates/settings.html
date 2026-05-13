@@ -145,6 +145,15 @@
             </select>
             <p class="hint">Applies a color overlay to the entire display (like a Photoshop adjustment layer)</p>
         </div>
+
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="ide_auto_indent_enabled"
+                       {% if config.IDE_AUTO_INDENT_ENABLED %}checked{% endif %}>
+                Enable IDE auto-indentation
+            </label>
+            <p class="hint">Preserves generated code exactly, but faster typing may increase LLM usage during unattended runs.</p>
+        </div>
     </section>
 
     <section class="settings-section">

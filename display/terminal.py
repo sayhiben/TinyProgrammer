@@ -263,8 +263,7 @@ class Terminal:
         elif char == '\b':
             self._backspace()
         elif char == '\t':
-            for _ in range(4):
-                self.type_char(' ', render=False)
+            self.type_tab(4, render=False)
         else:
             if self.cursor_x < self.cols:
                 line = self.lines[self.cursor_y]
@@ -275,6 +274,34 @@ class Terminal:
                 self.cursor_x += 1
             if self.cursor_x >= self.cols:
                 self._newline()
+        self._dirty = True
+        if render:
+            self._render()
+
+    def type_tab(self, tab_width: int = 4, render: bool = True):
+        """Insert one indentation level as spaces with a single render."""
+        tab_width = max(1, int(tab_width))
+        for _ in range(tab_width):
+            self.type_char(' ', render=False)
+        self._dirty = True
+        if render:
+            self._render()
+
+    def type_shift_tab(self, tab_width: int = 4, render: bool = True):
+        """Remove one indentation level when the cursor is in leading space."""
+        tab_width = max(1, int(tab_width))
+        line = self.lines[self.cursor_y]
+        leading_spaces = len(line) - len(line.lstrip(' '))
+
+        if self.cursor_x == 0 or self.cursor_x > leading_spaces:
+            return
+
+        start = max(0, self.cursor_x - tab_width)
+        if any(ch != ' ' for ch in line[start:self.cursor_x]):
+            return
+
+        self.lines[self.cursor_y] = line[:start] + line[self.cursor_x:]
+        self.cursor_x = start
         self._dirty = True
         if render:
             self._render()
