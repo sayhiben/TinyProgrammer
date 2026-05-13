@@ -21,7 +21,7 @@ from display.terminal import Terminal
 from llm.generator import LLMGenerator
 from programmer.personality import Personality
 from programmer import creativity
-from programmer.code_typing import CodeTypingHelper
+from programmer.code_typing import CodeTypingRenderer
 from programmer.liked_store import LikedStore
 from archive.repository import Repository
 from archive.learning import LearningSystem
@@ -339,12 +339,10 @@ class Brain:
         header = self.llm.get_header(self.current_program.program_type if self.current_program else "")
         self.terminal.type_string(header)
         full_code = header
-        code_typing = CodeTypingHelper(
+        code_typing = CodeTypingRenderer(
             self.terminal,
-            enabled=getattr(config, "IDE_AUTO_INDENT_ENABLED", False),
-            delay_func=lambda: random.uniform(0.02, 0.08),
-            tick_func=self.terminal.tick,
-            seed_text=header,
+            skip_indent=getattr(config, "TYPING_SKIP_INDENT", False),
+            delay_range=(0.02, 0.08),
         )
 
         in_code_block = False
@@ -632,11 +630,10 @@ class Brain:
         
         full_code = ""
         in_code_block = False
-        code_typing = CodeTypingHelper(
+        code_typing = CodeTypingRenderer(
             self.terminal,
-            enabled=getattr(config, "IDE_AUTO_INDENT_ENABLED", False),
-            delay_func=lambda: random.uniform(0.01, 0.05),
-            tick_func=self.terminal.tick,
+            skip_indent=getattr(config, "TYPING_SKIP_INDENT", False),
+            delay_range=(0.01, 0.05),
         )
 
         try:
