@@ -209,7 +209,7 @@ class System6Layout:
         reference = CANVAS_REFERENCE
         content_pad = _window_content_pad(scale)
         title_h = scale.u(TITLEBAR_HEIGHT)
-        canvas_window = pygame.Rect(
+        reference_window = pygame.Rect(
             scale_floor(reference.window.x, scale.sx)
             + scale_round_half_up(REFERENCE_LAYOUT_OFFSET_X, scale.sx),
             scale_floor(reference.window.y, scale.sy)
@@ -218,10 +218,17 @@ class System6Layout:
             max(1, scale_floor(reference.window.h, scale.sy)),
         )
         canvas_content = pygame.Rect(
-            canvas_window.x + content_pad,
-            canvas_window.y + title_h + content_pad,
-            max(1, canvas_window.w - content_pad * 2),
-            max(1, canvas_window.h - title_h - content_pad * 2),
+            reference_window.x + scale_floor(reference.content_offset_x, scale.sx),
+            reference_window.y + scale_floor(reference.content_offset_y, scale.sy),
+            max(1, scale_floor(reference.content_w, scale.sx)),
+            max(1, scale_floor(reference.content_h, scale.sy)),
+        )
+        canvas_window_y = max(0, canvas_content.y - title_h - content_pad)
+        canvas_window = pygame.Rect(
+            reference_window.x,
+            canvas_window_y,
+            reference_window.w,
+            canvas_content.bottom + content_pad - canvas_window_y,
         )
         return canvas_window, canvas_content
 
@@ -452,14 +459,15 @@ class System6Chrome:
         )
         pygame.draw.rect(self.surface, WHITE, title_rect)
 
-        stripe_inset = self.scale_context.u(TITLE_STRIPE_INSET)
+        stripe_inset = max(0, _window_content_pad(self.scale_context) - self.scale)
         stripe_gap = max(self.scale, self.scale_context.u(TITLE_CLOSE_GAP))
         first_stripe_y, last_stripe_y, _ = self._title_stripe_metrics(title_rect)
 
         close_size = last_stripe_y - first_stripe_y + self.scale
+        close_y = first_stripe_y - (self.scale - 1) // 2
         close = pygame.Rect(
             rect.x + self.scale_context.u(TITLE_CLOSE_OFFSET),
-            first_stripe_y,
+            close_y,
             close_size,
             close_size,
         )
@@ -472,9 +480,9 @@ class System6Chrome:
         title_pad = self.scale_context.u(TITLE_TEXT_PAD)
         erase = pygame.Rect(
             text_rect.x - title_pad,
-            title_rect.y,
+            first_stripe_y,
             text_rect.w + title_pad * 2,
-            title_rect.h,
+            last_stripe_y - first_stripe_y + self.scale,
         ).clip(title_rect)
         left_of_close_x = title_rect.x + stripe_inset
         left_of_close = pygame.Rect(
@@ -503,16 +511,7 @@ class System6Chrome:
         self.surface.blit(text, text_rect)
         title_bottom_y = title_rect.bottom
         title_bottom_right = rect.right - self.scale
-        if erase.x > rect.x:
-            self._painter.line(
-                (rect.x, title_bottom_y),
-                (erase.x - self.scale, title_bottom_y),
-            )
-        if erase.right < title_bottom_right:
-            self._painter.line(
-                (erase.right, title_bottom_y),
-                (title_bottom_right, title_bottom_y),
-            )
+        self._painter.line((rect.x, title_bottom_y), (title_bottom_right, title_bottom_y))
 
     def _window_titlebar_height(self) -> int:
         return self.scale_context.u(TITLEBAR_HEIGHT)
